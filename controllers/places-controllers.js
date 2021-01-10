@@ -1,7 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
+const { validationResult } = require("express-validator");
+const getCoordsForAddress = require("../util/location");
+
 const HttpError = require("../models/http-error");
 
-const DUMMY_PLACES = [
+let DUMMY_PLACES = [
   {
     id: "p1",
     title: "Oregon Dunes",
@@ -39,25 +42,40 @@ const getPlaceById = (req, res, next) => {
   res.json({ place });
 };
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.uid;
   console.log(userId);
-  const place = DUMMY_PLACES.find((p) => {
+  const places = DUMMY_PLACES.filter((p) => {
     return p.creator === userId;
   });
-  console.log(place);
-  if (!place) {
+  console.log(places);
+  if (!places || places.length === 0) {
     throw new HttpError(
-      "Could not find a place for the provided user id.",
+      "Could not find any places for the provided user id.",
       404
     );
   }
-  res.json({ place });
+  res.json({ places });
 };
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
+  //look for errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(
+      new HttpError("Invalid inputs passed, please check your data.", 422)
+    );
+  }
+
   //use destructuring to get the fields out of the body
-  const { title, description, coordinates, address, creator } = req.body;
+  const { title, description, address, creator } = req.body;
+  let coordinates;
+  try {
+    coordinates = await getCoordsForAddress(address);
+  } catch (error) {
+    return next(error);
+  }
+
   const createdPlace = {
     id: uuidv4(),
     title,
@@ -71,6 +89,42 @@ const createPlace = (req, res, next) => {
   res.status(201).json({ place: createdPlace }); //201 is successfully created
 };
 
+const updatePlace = (req, res, next) => {
+  //look for errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    throw new HttpError("Invalid inputs passed, please check your data.", 422);
+  }
+  //extract the id
+  const placeId = req.params.pid;
+  // get the new parameters
+  const { title, description } = req.body;
+
+  // find the place to update - work on a copy.
+  // change the copy and then replace because objects in JS are pass by reference
+  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
+  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
+  updatedPlace.title = title;
+  updatedPlace.description = description;
+  //replace old with new
+  DUMMY_PLACES[placeIndex] = updatedPlace;
+
+  // return the response
+  res.status(200).json({ place: updatedPlace });
+};
+
+const deletePlace = (req, res, next) => {
+  const placeId = req.params.pid;
+  if (!DUMMY_PLACES.find((p) => p.id === placeId)) {
+    throw new HttpError("Could not find that id.", 404);
+  }
+  DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
+  res.status(200).json({ message: `Deleted place: ${placeId}` });
+};
+
 exports.getPlaceById = getPlaceById;
-exports.getPlaceByUserId = getPlaceByUserId;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
+exports.updatePlace = updatePlace;
+exports.deletePlace = deletePlace;
