@@ -1,7 +1,11 @@
 const axios = require("axios");
-const HttpError = require("../models/http-error");
+require("dotenv").config();
 
-const API_KEY = "AIzaSyBfWSMtGPtPH_T6kdNuz8vO3bHP8BeUdO0";
+const HttpError = require("../models/http-error");
+//put this in an env file and git ignore it before pushing it
+// const API_KEY = "AIzaSyBfWSMtGPtPH_T6kdNuz8vO3bHP8BeUdO0";
+const API_KEY = process.env.API_KEY;
+console.log(API_KEY);
 
 //async makes sure that the return value of the function gets wrapped into a promise
 async function getCoordsForAddress(address) {
