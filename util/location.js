@@ -2,8 +2,8 @@ const axios = require("axios");
 require("dotenv").config();
 
 const HttpError = require("../models/http-error");
+
 //put this in an env file and git ignore it before pushing it
-// const API_KEY = "AIzaSyBfWSMtGPtPH_T6kdNuz8vO3bHP8BeUdO0";
 const API_KEY = process.env.API_KEY;
 console.log(API_KEY);
 
