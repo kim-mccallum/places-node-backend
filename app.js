@@ -1,9 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
+const DB_USER = process.env.DB_USER;
+const DB_PW = process.env.DB_PW;
 
 const app = express();
 
@@ -29,4 +33,14 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message || "An unknown error occured." });
 });
 
-app.listen(5000);
+//if you can connect to DB then start the server
+mongoose
+  .connect(
+    `mongodb+srv://${DB_USER}:${DB_PW}@cluster0.f0ild.mongodb.net/places?retryWrites=true&w=majority`
+  )
+  .then(() => {
+    app.listen(5000);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
