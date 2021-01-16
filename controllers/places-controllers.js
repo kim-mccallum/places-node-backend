@@ -30,17 +30,30 @@ let DUMMY_PLACES = [
   },
 ];
 
-const getPlaceById = (req, res, next) => {
+const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
-  const place = DUMMY_PLACES.find((p) => {
-    return p.id === placeId;
-  });
-
+  console.log(placeId);
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find that place REQUEST PROBLEM",
+      500
+    );
+    return next(error);
+  }
+  //you need both error handling bits
   if (!place) {
     // return to stop execution if there is an error
-    throw new HttpError("Could not find a place for the provided id.", 404);
+    const error = new HttpError(
+      "Could not find a place for the provided id.",
+      404
+    );
+    return next(error);
   }
-  res.json({ place });
+  //change the object to normal object and remove MongoDB underscore
+  res.json({ place: place.toObject({ getters: true }) }); //getters
 };
 
 const getPlacesByUserId = (req, res, next) => {
@@ -83,13 +96,16 @@ const createPlace = async (req, res, next) => {
     address,
     location: coordinates,
     image:
-      "https://media.deseretdigital.com/file/2576c93235?type=jpeg&quality=55&c=15&a=4379240d",
+      "https://upload.wikimedia.org/wikipedia/commons/1/10/Empire_State_Building_%28aerial_view%29.jpg",
     creator,
   });
+
+  // console.log(createdPlace);
 
   try {
     await createdPlace.save();
   } catch (err) {
+    console.log(err);
     const error = new HttpError(
       "Creating place failed, please try again.",
       500
