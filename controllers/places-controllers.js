@@ -124,7 +124,7 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ place: createdPlace }); //201 is successfully created
 };
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
   //look for errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -136,17 +136,32 @@ const updatePlace = (req, res, next) => {
   // get the new parameters
   const { title, description } = req.body;
 
-  // find the place to update - work on a copy.
-  // change the copy and then replace because objects in JS are pass by reference
-  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
-  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
-  updatedPlace.title = title;
-  updatedPlace.description = description;
-  //replace old with new
-  DUMMY_PLACES[placeIndex] = updatedPlace;
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not update place",
+      500
+    );
+    return next(error);
+  }
 
+  //update values
+  place.title = title;
+  place.description = description;
+  //Store the data in the DB
+  try {
+    await place.save();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not update place.",
+      500
+    );
+    return next(error);
+  }
   // return the response
-  res.status(200).json({ place: updatedPlace });
+  res.status(200).json({ place: place.toObject({ getters: true }) });
 };
 
 const deletePlace = (req, res, next) => {
