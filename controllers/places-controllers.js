@@ -32,13 +32,13 @@ let DUMMY_PLACES = [
 
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
-  console.log(placeId);
+
   let place;
   try {
     place = await Place.findById(placeId);
   } catch (err) {
     const error = new HttpError(
-      "Something went wrong, could not find that place REQUEST PROBLEM",
+      "Something went wrong, could not find that place",
       500
     );
     return next(error);
@@ -56,20 +56,27 @@ const getPlaceById = async (req, res, next) => {
   res.json({ place: place.toObject({ getters: true }) }); //getters
 };
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-  console.log(userId);
-  const places = DUMMY_PLACES.filter((p) => {
-    return p.creator === userId;
-  });
-  console.log(places);
+
+  let places;
+  try {
+    places = await Place.find({ creator: userId }); //mongoose returns array but MongoDB would return cursor
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching places for that user failed. Please try again later.",
+      500
+    );
+    return next(error);
+  }
+  // Check results before sending response
   if (!places || places.length === 0) {
-    throw new HttpError(
-      "Could not find any places for the provided user id.",
-      404
+    return next(
+      new HttpError("Could not find any places for the provided user id.", 404)
     );
   }
-  res.json({ places });
+
+  res.json({ places: places.map((p) => p.toObject({ getters: true })) });
 };
 
 const createPlace = async (req, res, next) => {
