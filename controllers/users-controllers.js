@@ -36,7 +36,7 @@ const signup = async (req, res, next) => {
       new HttpError("Invalid inputs passed, please check your data.", 422)
     );
   }
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   //only unique users
   let existingUser;
@@ -62,7 +62,7 @@ const signup = async (req, res, next) => {
     image:
       "https://www.iams.com/breedselector/images/f197fcc52dbee7ee625cdc5bca0b6f65.jpg",
     password, //THIS WILL BE ENCRYPTED SOON
-    places,
+    places: [],
   });
 
   try {
