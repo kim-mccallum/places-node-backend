@@ -14,6 +14,17 @@ const app = express();
 //parse the body of the incoming request before you pass it to all the routes
 app.use(bodyParser.json());
 
+// add middleware to handle CORS
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*"); //* allows any domain to send request
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Orgin, X-Requested-With, Content-Type, Accept, Authorization"
+  ); //this controls which headers the incoming request can have
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+  next();
+});
+
 app.use("/api/places", placesRoutes);
 app.use("/api/users", usersRoutes);
 
@@ -36,7 +47,7 @@ app.use((error, req, res, next) => {
 //if you can connect to DB then start the server
 mongoose
   .connect(
-    `mongodb+srv://${DB_USER}:${DB_PW}@cluster0.f0ild.mongodb.net/places?retryWrites=true&w=majority`
+    `mongodb+srv://${DB_USER}:${DB_PW}@cluster0.f0ild.mongodb.net/mern-places?retryWrites=true&w=majority`
   )
   .then(() => {
     app.listen(5000);
