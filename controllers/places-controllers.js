@@ -7,31 +7,6 @@ const User = require("../models/user");
 
 const HttpError = require("../models/http-error");
 
-let DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "Oregon Dunes",
-    description:
-      "Amazing dune and beach area with twisted shore pines, brackish sand ponds, and tons opportunities to kick up sand and chase critters!",
-    imageUrl:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhW0ROKQAoL-S2nkXUsmkxdrsu8jL2jUfcoA&usqp=CAU",
-    address: "855 US-101, Reedsport, OR 97467",
-    location: { lat: 43.7035362, lng: -124.1081505 },
-    creator: "u1",
-  },
-  {
-    id: "p2",
-    title: "Gooseberry Mesa",
-    description:
-      "Slick rock trails through pinyon juniper with a view of Zion! Great place to chase cows.",
-    imageUrl:
-      "https://www.doi.gov/sites/doi.gov/files/uploads/ZionNPTomMorrisSmall.jpg",
-    address: "Utah 84779",
-    location: { lat: 37.1414212, lng: -113.2511208 },
-    creator: "u2",
-  },
-];
-
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
 
@@ -61,9 +36,9 @@ const getPlaceById = async (req, res, next) => {
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
 
-  let places;
+  let userWithPlaces;
   try {
-    places = await Place.find({ creator: userId }); //mongoose returns array but MongoDB would return cursor
+    userWithPlaces = await User.findById(userId).populate("places");
   } catch (err) {
     const error = new HttpError(
       "Fetching places for that user failed. Please try again later.",
@@ -72,13 +47,15 @@ const getPlacesByUserId = async (req, res, next) => {
     return next(error);
   }
   // Check results before sending response
-  if (!places || places.length === 0) {
+  if (!userWithPlaces || userWithPlaces.places.length === 0) {
     return next(
       new HttpError("Could not find any places for the provided user id.", 404)
     );
   }
 
-  res.json({ places: places.map((p) => p.toObject({ getters: true })) });
+  res.json({
+    places: userWithPlaces.places.map((p) => p.toObject({ getters: true })),
+  });
 };
 
 const createPlace = async (req, res, next) => {
@@ -144,12 +121,10 @@ const createPlace = async (req, res, next) => {
     return next(error);
   }
 
-  //
-  res.status(201).json({ place: createdPlace }); //201 is successfully created
+  res.status(201).json({ place: createdPlace });
 };
 
 const updatePlace = async (req, res, next) => {
-  //look for errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors);
