@@ -35,7 +35,7 @@ const getPlaceById = async (req, res, next) => {
 
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-
+  console.log(userId);
   let userWithPlaces;
   try {
     userWithPlaces = await User.findById(userId).populate("places");
@@ -141,6 +141,7 @@ const updatePlace = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (err) {
+    console.log(error);
     const error = new HttpError(
       "Something went wrong, could not update place",
       500
