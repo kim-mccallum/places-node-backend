@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -13,6 +16,8 @@ const app = express();
 
 //parse the body of the incoming request before you pass it to all the routes
 app.use(bodyParser.json());
+//all files are locked down by default but we can use middleware to serve images
+app.use("/uploads/images", express.static(path.join("uploads", "images"))); //add middleware to serve static images
 
 // add middleware to handle CORS
 app.use((req, res, next) => {
@@ -36,6 +41,11 @@ app.use((req, res, next) => {
 
 //error handling in express - adding error means that this function only triggers with an error
 app.use((error, req, res, next) => {
+  if (req.file) {
+    fs.unlink(req.file.path, (err) => {
+      console.log(err);
+    }); //delete the file from the request
+  }
   //you can only send one response
   if (res.headerSent) {
     return next(error);

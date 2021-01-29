@@ -49,8 +49,7 @@ const signup = async (req, res, next) => {
   const createdUser = new User({
     name,
     email,
-    image:
-      "https://www.iams.com/breedselector/images/f197fcc52dbee7ee625cdc5bca0b6f65.jpg",
+    image: req.file.path, //path on the server
     password, //THIS WILL BE ENCRYPTED SOON
     places: [],
   });
