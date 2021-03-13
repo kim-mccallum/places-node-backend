@@ -10,7 +10,7 @@ const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
 const DB_USER = process.env.DB_USER;
-const DB_PW = process.env.DB_PW;
+const DB_PASSWORD = process.env.DB_PW;
 
 const app = express();
 
@@ -57,7 +57,7 @@ app.use((error, req, res, next) => {
 //if you can connect to DB then start the server
 mongoose
   .connect(
-    `mongodb+srv://${DB_USER}:${DB_PW}@cluster0.f0ild.mongodb.net/mern-places?retryWrites=true&w=majority`
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.f0ild.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
   )
   .then(() => {
     app.listen(5000);
