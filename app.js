@@ -18,26 +18,32 @@ const app = express();
 app.use(bodyParser.json());
 //all files are locked down by default but we can use middleware to serve images
 app.use("/uploads/images", express.static(path.join("uploads", "images"))); //add middleware to serve static images
+app.use(express.static(path.join("public")));
 
-// add middleware to handle CORS
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); //* allows any domain to send request
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Orgin, X-Requested-With, Content-Type, Accept, Authorization"
-  ); //this controls which headers the incoming request can have
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-  next();
-});
+// // add middleware to handle CORS
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*"); //* allows any domain to send request
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "Orgin, X-Requested-With, Content-Type, Accept, Authorization"
+//   ); //this controls which headers the incoming request can have
+//   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+//   next();
+// });
 
 app.use("/api/places", placesRoutes);
 app.use("/api/users", usersRoutes);
 
-//middleware to catch requests to unsupported routes
+// any request that reaches backend not handled by routes above, goes here. Serve React staticly
 app.use((req, res, next) => {
-  const error = new HttpError("Could not find this route.", 404);
-  throw error;
+  res.sendFile(path.resolve(__dirname, "public", "index.html"));
 });
+
+// //middleware to catch requests to unsupported routes
+// app.use((req, res, next) => {
+//   const error = new HttpError("Could not find this route.", 404);
+//   throw error;
+// });
 
 //error handling in express - adding error means that this function only triggers with an error
 app.use((error, req, res, next) => {
